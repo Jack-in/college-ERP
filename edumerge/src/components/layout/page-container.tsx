@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 interface ComponentProps {
   showBreadCrumb?: boolean;
@@ -27,7 +26,6 @@ interface ComponentProps {
 const PageContainer = ({
   title,
   src,
-  showBreadCrumb = false, // Disabled by default since breadcrumbs are not yet mapped
   children,
   titleClassName,
   subtitle,
@@ -35,10 +33,7 @@ const PageContainer = ({
   iconClassName,
   endActionComponent,
   footerComponent,
-  className,
   cardClassName,
-  separator = true,
-  separatorClassName,
   loading = false,
   hideHeader = false,
 }: ComponentProps) => {
