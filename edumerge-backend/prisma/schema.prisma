@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Institution {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  createdAt     DateTime       @default(now())
+  
+  campuses      Campus[]
+}
+
+model AcademicYear {
+  id            Int         @id @default(autoincrement())
+  year          String      @unique
+  
+  programs      Program[]
+}
+
+model Campus {
+  id            Int         @id @default(autoincrement())
+  name          String
+  institutionId Int
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  
+  programs      Program[]
+  
+  @@unique([institutionId, name])
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  
+  programs  Program[]
+}
+
+model Branch {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  
+  programs     Program[]
+}
+
+model Program {
+  id             Int          @id @default(autoincrement())
+  courseType     String       // UG | PG
+  entryType      String       // Regular | Lateral
+  
+  campusId       Int
+  campus         Campus       @relation(fields: [campusId], references: [id])
+  
+  departmentId   Int
+  department     Department   @relation(fields: [departmentId], references: [id])
+  
+  branchId       Int
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  
+  academicYearId Int
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  
+  quotas         ProgramQuota[]
+
+  @@unique([campusId, departmentId, branchId, academicYearId, courseType, entryType])
+}
+
+model ProgramQuota {
+  id            Int           @id @default(autoincrement())
+  quotaName     String        // KCET | COMEDK | Management
+  totalSeats    Int
+  occupiedSeats Int           @default(0) // Tracks both allocated and confirmed seats
+  feeAmount     Float
+  
+  programId     Int
+  program       Program       @relation(fields: [programId], references: [id], onDelete: Cascade)
+  
+  applications  Application[]
+
+  @@unique([programId, quotaName])
+}
+
+model Student {
+  id                Int       @id @default(autoincrement())
+  name              String
+  dob               DateTime
+  age               Int
+  sex               String
+  category          String
+  fatherName        String
+  email             String
+  phone             String
+  tenthPercentage   Float
+  twelfthPercentage Float
+  
+  application       Application?
+}
+
+model Application {
+  id               Int           @id @default(autoincrement())
+  applicationId    String        @unique // APP-YYYY-XXXXX
+  admissionNo      String?       @unique // ADM-YYYY-XXXX (nullable initially)
+  currentStep      String        // step-1, fee-payment, etc
+  seatStatus       String        @default("not_allocated") // not_allocated | allocated | confirmed | cancelled
+  draftData        String?       // JSON string for intermediate state
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  programQuotaId   Int?
+  programQuota     ProgramQuota? @relation(fields: [programQuotaId], references: [id])
+  
+  studentId        Int?          @unique
+  student          Student?      @relation(fields: [studentId], references: [id])
+  
+  feePayment       FeePayment?
+  documents        Document[]
+}
+
+model FeePayment {
+  id            Int         @id @default(autoincrement())
+  amount        Float
+  paid          Boolean     @default(false)
+  paidAt        DateTime?
+  
+  applicationId Int         @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id            Int         @id @default(autoincrement())
+  docType       String      // tenth | twelfth | aadhaar | pan
+  status        String      @default("pending") // pending | submitted | verified
+  
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, docType])
+}

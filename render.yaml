@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: edumerge-backend
+    env: node
+    rootDir: edumerge-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+
+# Note: Since the backend uses SQLite, the database is stored as a file.
+# Render's free tier has an ephemeral disk (wipes on restart).
+# For production, it strongly recommended to migrate Prisma to 'postgresql'.
